@@ -1,4 +1,5 @@
 <html>
+
 <head>
     <title>Human Capabilities – Decision Reaction Time</title>
     <style>
@@ -7,23 +8,57 @@
             background-color: white;
             margin: 0;
             overflow: hidden;
+            text-align: center;
+
         }
+
         #stimulus {
             position: absolute;
         }
+
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
+
 <body>
-    <h1 id="title">User Study</h1>
-    <h2 id="instruction">Press space to start!</h2>
-    <div id="stimulus"></div>
-    <p id="time"></p>
-    <p id="count"></p>
-    <p id="mean"></p>
-    <p id="sd"></p>
-    <p id="error"></p>
-    <p id="orangeStats"></p>
-    <p id="purpleStats"></p>
+    <h1>A.2 Decision Reaction Time</h1>
+
+    <div id="demographics">
+        <h2>Demographic Data</h2>
+        <label>Age: <input type="number" id="age" required></label><br><br>
+        <label>Gender:
+            <select id="gender">
+                <option value="">--Select--</option>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+                <option value="other">Other</option>
+            </select>
+        </label><br><br>
+        <label>Nationality: <input type="text" id="nationality" required></label><br><br>
+        <button onclick="startExperiment()">Start Test</button>
+    </div>
+
+    <div id="experiment" class="hidden">
+        <h1 id="title">User Study</h1>
+        <h2 id="instruction">Press space to start!</h2>
+        <div id="stimulus"></div>
+        <p id="time"></p>
+        <p id="count"></p>
+        <p id="mean"></p>
+        <p id="sd"></p>
+        <p id="error"></p>
+        <p id="orangeStats"></p>
+        <p id="purpleStats"></p>
+    </div>
+    </div>
+
+    <div id="final-results" class="hidden">
+        <h2>Results</h2>
+        <pre id="result-output"></pre>
+        <button onclick="downloadResults()">Download Results</button>
+    </div>
 
     <script>
         let experimentActive = false;
@@ -74,6 +109,19 @@
         }
 
         function startExperiment() {
+            const age = document.getElementById('age').value;
+            const gender = document.getElementById('gender').value;
+            const nationality = document.getElementById('nationality').value;
+
+            if (!age || !gender || !nationality) {
+                alert("Please complete all demographic fields.");
+                return;
+            }
+
+            demographics = { age, gender, nationality };
+
+            document.getElementById('demographics').classList.add('hidden');
+            document.getElementById('experiment').classList.remove('hidden');
             clearResults();
             trialCount = 0;
             times = [];
@@ -81,7 +129,7 @@
             timesPurple = [];
             errors = 0;
             experimentActive = true;
-            instruction.textContent = "Press space if a square appears! Press 'a' for results!";
+            instruction.textContent = "Press space if a square appears!";
             scheduleNextStimulus();
         }
 
@@ -165,6 +213,15 @@
             sdDisplay.textContent = `SD: ${Math.round(sd)} ms`;
             errorDisplay.textContent = `Errors: ${errors} (${errorRate}%)`;
 
+            let output = `--- Demographic Info ---\n`;
+            output += `Age: ${demographics.age}\nGender: ${demographics.gender}\nNationality: ${demographics.nationality}\n\n`;
+            output += `Trials: ${times.length}\nMean: ${Math.round(mean)} ms\nSD: ${Math.round(sd)} ms\nErrors: ${errors} (${errorRate}%)\n`;
+
+            document.getElementById('result-output').textContent = output;
+
+            document.getElementById('experiment').classList.add('hidden');
+            document.getElementById('final-results').classList.remove('hidden');
+
         }
 
         window.addEventListener("keydown", (e) => {
@@ -189,12 +246,24 @@
                 } else {
                     errors++;
                 }
-            } else if (e.key === "a") {
-                if (experimentActive) {
-                    stopExperiment();
-                }
-            }
+            } else if (e.key === "a" && trialCount >= maxTrials) {
+    if (experimentActive) {
+        stopExperiment();
+    }
+}
         });
+
+        function downloadResults() {
+            const data = document.getElementById('result-output').textContent;
+            const blob = new Blob([data], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `reaction_results_${demographics.nationality}_${Date.now()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
     </script>
 </body>
+
 </html>
